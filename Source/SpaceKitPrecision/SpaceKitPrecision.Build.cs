@@ -12,6 +12,6 @@ public class SpaceKitPrecision : ModuleRules
 
 		PrivatePCHHeaderFile = "SpaceKitPrecision.h";
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "Boost" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "BoostFPM" });
 	}
 }

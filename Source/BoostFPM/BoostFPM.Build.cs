@@ -2,12 +2,12 @@ using System;
 using System.IO;
 using UnrealBuildTool;
 
-public class Boost : ModuleRules
+public class BoostFPM : ModuleRules
 {
-    public Boost(ReadOnlyTargetRules Target) : base(Target)
+    public BoostFPM(ReadOnlyTargetRules Target) : base(Target)
     {
 		PCHUsage = ModuleRules.PCHUsageMode.UseSharedPCHs;
-        PrivatePCHHeaderFile = "Public/Boost.h";
+        PrivatePCHHeaderFile = "Public/BoostFPM.h";
         
         bUseUnity = false;
 

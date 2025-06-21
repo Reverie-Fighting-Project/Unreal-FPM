@@ -27,7 +27,7 @@ struct SPACEKITPRECISION_API FRealFixed
  */
 protected:
     UPROPERTY()
-    uint8 InternalValue[sizeof real_fixed_type];
+    uint8 InternalValue[sizeof(real_fixed_type)];
 public:
     real_fixed_type& Value;
 

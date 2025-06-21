@@ -10,7 +10,7 @@
 #pragma warning(pop)
 
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Boost/Public/Boost.h"
+#include "BoostFPM/Public/BoostFPM.h"
 #include "CoreMinimal.h"
 #include "PrecisionSettings.h"
 #include "HAL/Platform.h"
@@ -48,7 +48,7 @@ struct SPACEKITPRECISION_API FRealFloat
  */
 protected:
     UPROPERTY()
-    uint8 InternalValue[sizeof ttBigType];
+    uint8 InternalValue[sizeof(ttBigType)];
 public:
 	ttBigType& Value = *reinterpret_cast<ttBigType*>(InternalValue);
 

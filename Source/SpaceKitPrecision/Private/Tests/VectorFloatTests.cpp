@@ -9,7 +9,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathVectorFloatOperatorsTest, "SpaceKitPrecision.VectorFloatMath.Operators", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathVectorFloatOperatorsTest, "SpaceKitPrecision.VectorFloatMath.Operators", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 

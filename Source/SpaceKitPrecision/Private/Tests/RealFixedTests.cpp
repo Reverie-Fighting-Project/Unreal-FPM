@@ -9,7 +9,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFixedOperatorsTest, "SpaceKitPrecision.FixedPointMath.Operators", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFixedOperatorsTest, "SpaceKitPrecision.FixedPointMath.Operators", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 
@@ -121,7 +121,7 @@ bool FCoreMathFixedOperatorsTest::RunTest(const FString& Parameters)
 #pragma optimize("", on)
 
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFixedLimitsTest, "SpaceKitPrecision.FixedPointMath.Limits", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFixedLimitsTest, "SpaceKitPrecision.FixedPointMath.Limits", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 

@@ -9,7 +9,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFloatOperatorsTest, "SpaceKitPrecision.FloatingPointMath.Operators", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoreMathFloatOperatorsTest, "SpaceKitPrecision.FloatingPointMath.Operators", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 
@@ -110,7 +110,7 @@ bool FCoreMathFloatOperatorsTest::RunTest(const FString& Parameters)
 #pragma optimize("", on)
 
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpacePrecisionFloatAdvancedMath, "SpaceKitPrecision.FloatingPointMath.AdvancedMath", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpacePrecisionFloatAdvancedMath, "SpaceKitPrecision.FloatingPointMath.AdvancedMath", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 
@@ -408,7 +408,7 @@ bool FSpacePrecisionFloatAdvancedMath::RunTest(const FString& Parameters)
 
 #pragma optimize("", on)
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpacePrecisionFloatLimitsTest, "SpaceKitPrecision.FloatingPointMath.Limits", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::SmokeFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpacePrecisionFloatLimitsTest, "SpaceKitPrecision.FloatingPointMath.Limits", EAutomationTestFlags::ProgramContext | EAutomationTestFlags::SmokeFilter)
 
 #pragma optimize("", off)
 
