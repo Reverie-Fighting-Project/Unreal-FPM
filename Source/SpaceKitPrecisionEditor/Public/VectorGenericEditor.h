@@ -4,109 +4,76 @@
 
 #include "CoreMinimal.h"
 #include "IPropertyTypeCustomization.h"
-
-#include "SpaceKitPrecisionEditor/Public/VectorGenericEntryBox.h"
+#include "DetailWidgetRow.h"
+#include "DetailLayoutBuilder.h"
+#include "Widgets/Text/STextBlock.h"
+#include "VectorGenericEntryBox.h"
+#include "RotatorFloat.h" 
 
 #define LOCTEXT_NAMESPACE "FVectorGenericStructCustomization"
 
-// Property customization, for vector type. In order to don't recode this struct for each vector class, we made it generic
-template<typename VectorType, typename ScalarType>
+template<typename VectorType, typename RealType>
 class FVectorGenericStructCustomization : public IPropertyTypeCustomization
 {
 public:
-
-	static TSharedRef<IPropertyTypeCustomization> MakeInstance(
-		FText InLabelX = LOCTEXT("LabelX", "X"), FText InLabelY = LOCTEXT("LabelY", "Y"), FText InLabelZ = LOCTEXT("LabelZ", "Z"),
-		FText InTooltipX = LOCTEXT("TooltipX", "Axis X"), FText InTooltipY = LOCTEXT("TooltipY", "Axis Y"), FText InTooltipZ = LOCTEXT("TooltipZ", "Axis Z")
-	)
-	{
-		return MakeShareable(new FVectorGenericStructCustomization(InLabelX, InLabelY, InLabelZ, InTooltipX, InTooltipY, InTooltipZ));
-	}
-
 	static TSharedRef<IPropertyTypeCustomization> MakeInstanceDefaults()
 	{
-		return MakeInstance();
+		return MakeShareable(new FVectorGenericStructCustomization<VectorType, RealType>(
+			LOCTEXT("LabelX", "X"), LOCTEXT("LabelY", "Y"), LOCTEXT("LabelZ", "Z"),
+			LOCTEXT("TooltipX", "X"), LOCTEXT("TooltipY", "Y"), LOCTEXT("TooltipZ", "Z")
+		));
+	}
+	
+	static TSharedRef<IPropertyTypeCustomization> MakeInstance(
+		FText InLabelX, FText InLabelY, FText InLabelZ,
+		FText InTooltipX, FText InTooltipY, FText InTooltipZ)
+	{
+		return MakeShareable(new FVectorGenericStructCustomization<VectorType, RealType>(InLabelX, InLabelY, InLabelZ, InTooltipX, InTooltipY, InTooltipZ));
 	}
 
+	FVectorGenericStructCustomization(
+		FText InLabelX, FText InLabelY, FText InLabelZ,
+		FText InTooltipX, FText InTooltipY, FText InTooltipZ)
+		:
+		LabelX(InLabelX), LabelY(InLabelY), LabelZ(InLabelZ),
+		TooltipX(InTooltipX), TooltipY(InTooltipY), TooltipZ(InTooltipZ)
+	{
+	}
+
+public:
 	void CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils) override
 	{
-		using SVectorGenericEntryBoxSpecialized = SVectorGenericEntryBox<VectorType, ScalarType>;
+		// Restore the correct layout using the custom SVectorGenericEntryBox
+		using SVectorEntryBox = SVectorGenericEntryBox<VectorType, RealType>;
 		
-		VectorFixedPropertyHandle = PropertyHandle;
-
-		void* Data;
-		PropertyHandle->GetValueData(Data);
-		VectorType* Value = static_cast<VectorType*>(Data);
-
 		HeaderRow
 		.NameContent()
 		[
 			PropertyHandle->CreatePropertyNameWidget()
 		]
 		.ValueContent()
-		.HAlign(HAlign_Fill)
+		.MinDesiredWidth(250)
 		[
-			SNew(SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-			.FillWidth(500.f)
-			.Padding(2.f, 0.f)
-			[
-				SNew(SVectorGenericEntryBoxSpecialized)
-				.Vector(this, &FVectorGenericStructCustomization::GetVectorFixed)
-				.OnVectorCommitted(this, &FVectorGenericStructCustomization::SetVectorFixed)
-				.Font(IDetailLayoutBuilder::GetDetailFont())
-				.LabelX(LabelX)
-				.LabelY(LabelY)
-				.LabelZ(LabelZ)
-				.TooltipX(TooltipX)
-				.TooltipY(TooltipY)
-				.TooltipZ(TooltipZ)
-			]
+			SNew(SVectorEntryBox)
+			.PropertyHandle(PropertyHandle)
+			.LabelX(LabelX)
+			.LabelY(LabelY)
+			.LabelZ(LabelZ)
+			.TooltipX(TooltipX)
+			.TooltipY(TooltipY)
+			.TooltipZ(TooltipZ)
+			.bColorAxisLabels(true)
 		];
 	}
 
 	void CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils) override
 	{
+		// This can be empty as the header handles the UI.
 	}
-
-	VectorType GetVectorFixed() const
-	{
-		TSharedPtr<IPropertyHandle> VectorFixedSharedPtr = VectorFixedPropertyHandle.Pin();
-
-		void* Data;
-		VectorFixedSharedPtr->GetValueData(Data);
-		VectorType* Value = static_cast<VectorType*>(Data);
-
-		return Value ? *Value : VectorType::Identity;
-	}
-
-	void SetVectorFixed(ScalarType NewValue, EAxis::Type Axis, ETextCommit::Type CommitType)
-	{
-		TSharedPtr<IPropertyHandle> VectorFixedSharedPtr = VectorFixedPropertyHandle.Pin();
-
-		void* Data;
-		VectorFixedSharedPtr->GetValueData(Data);
-		VectorType* Value = static_cast<VectorType*>(Data);
-
-		VectorFixedSharedPtr->NotifyPreChange();
-		Value->GetAxis(Axis) = NewValue;
-		VectorFixedSharedPtr->NotifyPostChange(EPropertyChangeType::ValueSet);
-	}
-
-private:
-	
-	TWeakPtr<IPropertyHandle> VectorFixedPropertyHandle;
-
-	FText LabelX, LabelY, LabelZ;
-	FText TooltipX, TooltipY, TooltipZ;
 
 protected:
-
-	FVectorGenericStructCustomization(const FText& InLabelX, const FText& InLabelY, const FText& InLabelZ, const FText& InTooltipX, const FText& InTooltipY, const FText& InTooltipZ)
-		: IPropertyTypeCustomization(), LabelX(InLabelX), LabelY(InLabelY), LabelZ(InLabelZ), TooltipX(InTooltipX), TooltipY(InTooltipY), TooltipZ(InTooltipZ)
-	{
-	}
+	FText LabelX, LabelY, LabelZ;
+	FText TooltipX, TooltipY, TooltipZ;
 };
 
 #undef LOCTEXT_NAMESPACE

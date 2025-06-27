@@ -2,78 +2,49 @@
 
 #pragma once
 
-#include "SpaceKitPrecisionEditor/Public/RealGenericEditor.h"
-
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
-#include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "PropertyHandle.h"
+#include "RotatorFloat.h" // Ensure RotatorFloat is included
 
 class FArguments;
 class SHorizontalBox;
 
 #define LOCTEXT_NAMESPACE "SVectorGenericEntryBox"
 
-// Widget for editing vector types, with three axes. Can be reused for any vector-ish types, including rotators
-// This is inspired by SVectorInputBox
+// Widget for editing vector types, with three axes.
 template<typename VectorType, typename ScalarType>
 class SVectorGenericEntryBox : public SCompoundWidget
 {
 public:
-
-	// Delegate for numeric value committed
-	DECLARE_DELEGATE_ThreeParams(FOnValueCommitted, ScalarType /*NewValue*/, EAxis::Type /*ChangedAxis*/, ETextCommit::Type /*CommitType*/);
-
-public:
-
-	using SVectorGenericEntryBoxSpecialized = SVectorGenericEntryBox<VectorType, ScalarType>;
-	SLATE_BEGIN_ARGS( SVectorGenericEntryBoxSpecialized )
+	SLATE_BEGIN_ARGS( SVectorGenericEntryBox )
 		: _Font( FCoreStyle::Get().GetFontStyle("NormalFont") )
 		, _bColorAxisLabels( false )
 		{}
 
-		// Value
-		SLATE_ATTRIBUTE( VectorType, Vector )
-
-		// Font
+		SLATE_ARGUMENT( TSharedPtr<IPropertyHandle>, PropertyHandle )
+		SLATE_ATTRIBUTE( TOptional<VectorType>, Vector )
 		SLATE_ATTRIBUTE( FSlateFontInfo, Font )
-
-		// Label X
 		SLATE_ARGUMENT(FText, LabelX)
-
-		// Label Y
 		SLATE_ARGUMENT(FText, LabelY)
-
-		// Label Z
 		SLATE_ARGUMENT(FText, LabelZ)
-
-		// Tooltip X
 		SLATE_ARGUMENT(FText, TooltipX)
-
-		// Tooltip Y
 		SLATE_ARGUMENT(FText, TooltipY)
-
-		// Tooltip Z
 		SLATE_ARGUMENT(FText, TooltipZ)
-
-		// Color the axes
 		SLATE_ARGUMENT( bool, bColorAxisLabels )
-
-		// Called when a component of the vector is committed
-		SLATE_EVENT( FOnValueCommitted, OnVectorCommitted )
-
+		
+		// Note: The delegate is no longer needed here as the widget now handles the property directly.
+		
 	SLATE_END_ARGS()
 
 	void Construct( const FArguments& InArgs )
 	{
 		TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox);
-
-		ChildSlot
-		[
-			HorizontalBox
-		];
-
+		ChildSlot[HorizontalBox];
+		
+		PropertyHandle = InArgs._PropertyHandle;
 		VectorAttribute = InArgs._Vector;
-		OnVectorValueCommitted = InArgs._OnVectorCommitted;
 
 		ConstructAxis(EAxis::X, InArgs, HorizontalBox);
 		ConstructAxis(EAxis::Y, InArgs, HorizontalBox);
@@ -81,49 +52,98 @@ public:
 	}
 
 private:
-
-	TAttribute<VectorType> VectorAttribute;
-
-	FOnValueCommitted OnVectorValueCommitted;
+	TSharedPtr<IPropertyHandle> PropertyHandle;
+	TAttribute<TOptional<VectorType>> VectorAttribute;
 
 	void ConstructAxis(EAxis::Type Axis, const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox)
 	{
-#define GET_AXIS(axis, x, y, z) (((axis) == EAxis::X) ? (x) : (((axis) == EAxis::Y) ? (y) : (z)))
+		const auto GetAxisValue = [](EAxis::Type InAxis, auto x, auto y, auto z)
+		{
+			return (InAxis == EAxis::X) ? x : ((InAxis == EAxis::Y) ? y : z);
+		};
 
 		const FLinearColor LabelColor = InArgs._bColorAxisLabels
-			? GET_AXIS(Axis, SNumericEntryBox<float>::RedLabelBackgroundColor, SNumericEntryBox<float>::GreenLabelBackgroundColor, SNumericEntryBox<float>::BlueLabelBackgroundColor)
+			? GetAxisValue(Axis, SNumericEntryBox<double>::RedLabelBackgroundColor, SNumericEntryBox<double>::GreenLabelBackgroundColor, SNumericEntryBox<double>::BlueLabelBackgroundColor)
 			: FLinearColor(0.0f, 0.0f, 0.0f, .5f);
 
 		HorizontalBox->AddSlot()
 		.VAlign(VAlign_Center)
 		.FillWidth(1.f)
-		.Padding(0.0f, 1.f, GET_AXIS(Axis, 2.f, 2.f, 0.f), 1.f)
+		.Padding(0.0f, 1.f, GetAxisValue(Axis, 2.f, 2.f, 0.f), 1.f)
 		[
-			SNew(SNumericEntryBox<TRealNumericBoxWrapper<ScalarType>>)
+			SNew(SNumericEntryBox<double>)
 			.Font(InArgs._Font)
-			.Value(this, &SVectorGenericEntryBox::GetValue, Axis)
-			.OnValueCommitted(this, &SVectorGenericEntryBox::OnValueCommitted, Axis)
-			.ToolTipText(GET_AXIS(Axis, InArgs._TooltipX, InArgs._TooltipY, InArgs._TooltipZ))
-			.UndeterminedString(LOCTEXT("Invalid", "Invalid"))
-			.TypeInterface(MakeShareable(new TRealNumericTypeInterface<ScalarType>()))
+			.Value(this, &SVectorGenericEntryBox::GetComponentValue, Axis)
+			.OnValueCommitted(this, &SVectorGenericEntryBox::OnComponentCommitted, Axis)
+			.ToolTipText(GetAxisValue(Axis, InArgs._TooltipX, InArgs._TooltipY, InArgs._TooltipZ))
+			.UndeterminedString(LOCTEXT("MultipleValues", "---"))
 			.LabelPadding(0)
 			.Label()
 			[
-				SNumericEntryBox<float>::BuildLabel(GET_AXIS(Axis, InArgs._LabelX, InArgs._LabelY, InArgs._LabelZ), FLinearColor::White, LabelColor)
+				SNumericEntryBox<float>::BuildLabel(GetAxisValue(Axis, InArgs._LabelX, InArgs._LabelY, InArgs._LabelZ), FLinearColor::White, LabelColor)
 			]
 		];		
 	}
 
-	TOptional<TRealNumericBoxWrapper<ScalarType>> GetValue(EAxis::Type Axis) const
+	TOptional<double> GetComponentValue(EAxis::Type Axis) const
 	{
-		if (!VectorAttribute.IsBound()) return TOptional<TRealNumericBoxWrapper<ScalarType>>();
-		return TRealNumericBoxWrapper<ScalarType>(VectorAttribute.Get().GetAxis(Axis));
+		if (PropertyHandle.IsValid())
+		{
+			TArray<void*> RawData;
+			PropertyHandle->AccessRawData(RawData);
+			if (RawData.Num() == 1)
+			{
+				const VectorType* VecValue = static_cast<const VectorType*>(RawData[0]);
+				if constexpr (std::is_same_v<VectorType, FRotatorFloat>)
+				{
+					if (Axis == EAxis::X) { return VecValue->Roll.ToDouble(); }
+					if (Axis == EAxis::Y) { return VecValue->Pitch.ToDouble(); }
+					return VecValue->Yaw.ToDouble();
+				}
+				else
+				{
+					if (Axis == EAxis::X) { return VecValue->X.ToDouble(); }
+					if (Axis == EAxis::Y) { return VecValue->Y.ToDouble(); }
+					return VecValue->Z.ToDouble();
+				}
+			}
+		}
+		return TOptional<double>(); // Unset for multi-selection
 	}
 
-	void OnValueCommitted(TRealNumericBoxWrapper<ScalarType> NewValue, ETextCommit::Type CommitType, EAxis::Type Axis)
+	void OnComponentCommitted(double NewValue, ETextCommit::Type CommitType, EAxis::Type Axis)
 	{
-		if (!OnVectorValueCommitted.IsBound()) return;
-		OnVectorValueCommitted.ExecuteIfBound(NewValue.Val, Axis, CommitType);
+		if(PropertyHandle.IsValid())
+		{
+			// Corrected transaction text.
+			FText TransactionText = (Axis == EAxis::X) ? LOCTEXT("SetComponentX", "Set X") : (Axis == EAxis::Y) ? LOCTEXT("SetComponentY", "Set Y") : LOCTEXT("SetComponentZ", "Set Z");
+			FScopedTransaction Transaction(TransactionText);
+
+			PropertyHandle->NotifyPreChange();
+			
+			TArray<void*> RawData;
+			PropertyHandle->AccessRawData(RawData);
+			for (void* Data : RawData)
+			{
+				VectorType* VecValue = static_cast<VectorType*>(Data);
+
+				// THE DEFINITIVE FIX: Access members directly for all types.
+				if constexpr (std::is_same_v<VectorType, FRotatorFloat>)
+				{
+					if (Axis == EAxis::X) { VecValue->Roll = ScalarType(NewValue); }
+					else if (Axis == EAxis::Y) { VecValue->Pitch = ScalarType(NewValue); }
+					else { VecValue->Yaw = ScalarType(NewValue); }
+				}
+				else
+				{
+					if (Axis == EAxis::X) { VecValue->X = ScalarType(NewValue); }
+					else if (Axis == EAxis::Y) { VecValue->Y = ScalarType(NewValue); }
+					else { VecValue->Z = ScalarType(NewValue); }
+				}
+			}
+			
+			PropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
+		}
 	}
 };
 
