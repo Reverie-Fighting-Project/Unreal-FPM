@@ -9,11 +9,10 @@
 #include "RotatorFixed.generated.h"
 
 // Forward declaration for the fixed-point quaternion.
-// It's assumed a 'FQuatFixed' struct exists or will be created, similar to this rotator.
 struct FQuatFixed;
 
 /*
- * Similar to an FRotator, but using deterministic fixed-point reals instead of floats.
+ * Similar to an FRotator, but using deterministic fixed-point reals.
  */
 USTRUCT(BlueprintType)
 struct SPACEKITPRECISION_API FRotatorFixed
@@ -34,7 +33,7 @@ public:
     static FRotatorFixed Identity;
 
     FRotatorFixed()
-        : Pitch(0.0), Yaw(0.0), Roll(0.0)
+        : Pitch(0), Yaw(0), Roll(0)
     {
     }
 
@@ -49,7 +48,7 @@ public:
     }
 
     // Builds a rotator from a fixed-point quaternion
-    explicit FRotatorFixed(const FQuatFixed& Rotator);
+    explicit FRotatorFixed(const FQuatFixed& InQuat);
 
 // Rotator math
 public:
@@ -61,9 +60,7 @@ public:
 
     FRotatorFixed& operator+=(const FRotatorFixed& Other)
     {
-        Pitch += Other.Pitch;
-        Yaw += Other.Yaw;
-        Roll += Other.Roll;
+        Pitch += Other.Pitch; Yaw += Other.Yaw; Roll += Other.Roll;
         return *this;
     }
 
@@ -74,10 +71,14 @@ public:
 
     FRotatorFixed& operator-=(const FRotatorFixed& Other)
     {
-        Pitch -= Other.Pitch;
-        Yaw -= Other.Yaw;
-        Roll -= Other.Roll;
+        Pitch -= Other.Pitch; Yaw -= Other.Yaw; Roll -= Other.Roll;
         return *this;
+    }
+
+    // Note: Component-wise multiplication of rotators is not a standard rotation operation.
+    FRotatorFixed operator*(const FRotatorFixed& Other) const
+    {
+        return FRotatorFixed(Pitch * Other.Pitch, Yaw * Other.Yaw, Roll * Other.Roll);
     }
 
     FRotatorFixed operator*(FRealFixed Other) const
@@ -87,23 +88,19 @@ public:
 
     FRotatorFixed& operator*=(FRealFixed Other)
     {
-        Pitch *= Other;
-        Yaw *= Other;
-        Roll *= Other;
+        Pitch *= Other; Yaw *= Other; Roll *= Other;
         return *this;
+    }
+
+    // Note: Component-wise division of rotators is not a standard rotation operation.
+    FRotatorFixed operator/(const FRotatorFixed& Other) const
+    {
+        return FRotatorFixed(Pitch / Other.Pitch, Yaw / Other.Yaw, Roll / Other.Roll);
     }
 
     FRotatorFixed operator/(FRealFixed Other) const
     {
         return FRotatorFixed(Pitch / Other, Yaw / Other, Roll / Other);
-    }
-
-    FRotatorFixed& operator/=(FRealFixed Other)
-    {
-        Pitch /= Other;
-        Yaw /= Other;
-        Roll /= Other;
-        return *this;
     }
 
     FRotatorFixed operator-() const
@@ -113,11 +110,10 @@ public:
 
     FRotator ToFRotator() const
     {
-        // Note: Standard FRotator constructor is (Pitch, Yaw, Roll)
         return FRotator(Pitch.ToFloat(), Yaw.ToFloat(), Roll.ToFloat());
     }
 
-    bool Equals(const FRotatorFixed& Other, FRealFixed Tolerance = FRealFixed("0.000001")) const
+    bool Equals(const FRotatorFixed& Other, FRealFixed Tolerance = FRealFixed("0.00001")) const
     {
         return (URealFixedMath::Abs(Yaw - Other.Yaw) <= Tolerance)
             && (URealFixedMath::Abs(Pitch - Other.Pitch) <= Tolerance)
@@ -131,13 +127,13 @@ public:
 
     bool operator!=(const FRotatorFixed& Other) const
     {
-        return Pitch != Other.Pitch || Yaw != Other.Yaw || Roll != Other.Roll;
+        return !(*this == Other);
     }
 
-    // Rotates a given vector by this rotator
+    // Rotates a given vector by this rotator (by converting to a quaternion).
     FVectorFixed RotateVector(const FVectorFixed& Vec) const;
 
-    // Rotates backward a given vector by this rotator
+    // Un-rotates a given vector by this rotator.
     FVectorFixed UnrotateVector(const FVectorFixed& Vec) const;
 
     FString ToString() const
@@ -147,22 +143,12 @@ public:
 
     FRealFixed& GetAxis(EAxis::Type Axis)
     {
-        switch (Axis)
-        {
-        case EAxis::X: return Roll;
-        case EAxis::Y: return Pitch;
-        case EAxis::Z: default: return Yaw;
-        }
+        switch (Axis) { case EAxis::X: return Roll; case EAxis::Y: return Pitch; default: return Yaw; }
     }
 
     const FRealFixed& GetAxis(EAxis::Type Axis) const
     {
-        switch (Axis)
-        {
-        case EAxis::X: return Roll;
-        case EAxis::Y: return Pitch;
-        case EAxis::Z: default: return Yaw;
-        }
+        switch (Axis) { case EAxis::X: return Roll; case EAxis::Y: return Pitch; default: return Yaw; }
     }
 };
 
@@ -174,40 +160,39 @@ class SPACEKITPRECISION_API URotatorFixedMath : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 	
-// Basic conversions
 public:
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "FRotator to RotatorFixed", CompactNodeTitle = "->", BlueprintAutocast))
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "FRotator to RotatorFixed", CompactNodeTitle = "->", BlueprintAutocast))
     static FRotatorFixed ConvFRotatorToRotatorFixed(const FRotator& InRot);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "RotatorFixed to FRotator", CompactNodeTitle = "->", BlueprintAutocast))
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "RotatorFixed to FRotator", CompactNodeTitle = "->", BlueprintAutocast))
     static FRotator ConvRotatorFixedToFRotator(const FRotatorFixed& InRot);
     
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "Make RotatorFixed", Keywords = "construct build", CompactNodeTitle = "Make"))
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "Make RotatorFixed", Keywords = "construct build", CompactNodeTitle = "Make"))
     static FRotatorFixed MakeRotatorFixed(const FRealFixed& Pitch, const FRealFixed& Yaw, const FRealFixed& Roll);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "Break RotatorFixed", Keywords = "split", CompactNodeTitle = "Break"))
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "Break RotatorFixed", Keywords = "split", CompactNodeTitle = "Break"))
     static void BreakRotatorFixed(const FRotatorFixed& Rot, FRealFixed& Pitch, FRealFixed& Yaw, FRealFixed& Roll);
 
-// Basic RotFixed math
-public:
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed + RotatorFixed", CompactNodeTitle="+"))
+    static FRotatorFixed Add(const FRotatorFixed& A, const FRotatorFixed& B);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed + RotatorFixed", CompactNodeTitle="+"))
-    static FRotatorFixed RotPlusRot(const FRotatorFixed& A, const FRotatorFixed& B);
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed - RotatorFixed", CompactNodeTitle="-"))
+    static FRotatorFixed Subtract(const FRotatorFixed& A, const FRotatorFixed& B);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed - RotatorFixed", CompactNodeTitle="-"))
-    static FRotatorFixed RotMinusRot(const FRotatorFixed& A, const FRotatorFixed& B);
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed * RealFixed", CompactNodeTitle="*"))
+    static FRotatorFixed MultiplyByReal(const FRotatorFixed& A, const FRealFixed& B);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed * RealFixed", CompactNodeTitle="*"))
-    static FRotatorFixed RotMultReal(const FRotatorFixed& A, const FRealFixed& B);
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "RotatorFixed * RotatorFixed", CompactNodeTitle = "*", Keywords = "component-wise"))
+    static FRotatorFixed MultiplyByRotator(const FRotatorFixed& A, const FRotatorFixed& B);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed / RealFixed", CompactNodeTitle="/"))
-    static FRotatorFixed RotDivReal(const FRotatorFixed& A, const FRealFixed& B);
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta=(DisplayName = "RotatorFixed / RealFixed", CompactNodeTitle="/"))
+    static FRotatorFixed DivideByReal(const FRotatorFixed& A, const FRealFixed& B);
+    
+    UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "Equals (RotatorFixed)", CompactNodeTitle = "==", Keywords = "== equal"))
+    static bool Equals(const FRotatorFixed& A, const FRotatorFixed& B, const FRealFixed& Tolerance);
 
-    UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "Equals (RotatorFixed)", CompactNodeTitle = "==", Keywords = "== equal"))
-    static bool RotEqualsRot(const FRotatorFixed& A, const FRotatorFixed& B, const FRealFixed& Tolerance);
-
-	UFUNCTION(BlueprintPure, category = "Math|RotatorFixed", meta = (DisplayName = "Not Equal (RotatorFixed)", CompactNodeTitle = "!=", Keywords = "!= not equal"))
-    static bool RotNotEqualsRot(const FRotatorFixed& A, const FRotatorFixed& B, const FRealFixed& Tolerance);
+	UFUNCTION(BlueprintPure, Category = "Math|RotatorFixed", meta = (DisplayName = "Not Equal (RotatorFixed)", CompactNodeTitle = "!=", Keywords = "!= not equal"))
+    static bool NotEqual(const FRotatorFixed& A, const FRotatorFixed& B, const FRealFixed& Tolerance);
 
 };

@@ -20,9 +20,9 @@ struct SPACEKITPRECISION_API FRealFixed
     GENERATED_BODY()
 
 /*
- * After a LOT of trial and error, we chose this solution to interface big numbers to UE4:
- * It permits to serialize data automatically, in a way that works with all UE4 systems, including FProperty (only using a custom serializer is not sufficient for editor related stuff).
- * The idea here is to store the data in a c-style (stack allocated) array, that will be used by UE4 internally.
+ * After a LOT of trial and error, we chose this solution to interface big numbers to Unreal Engine:
+ * It permits to serialize data automatically, in a way that works with all Unreal Engine systems, including FProperty (only using a custom serializer is not sufficient for editor related stuff).
+ * The idea here is to store the data in a c-style (stack allocated) array, that will be used by Unreal Engine internally.
  * It's exposed, for *internal* C++ usage, with the Value reference, that is just a reinterpret_cast reference to the bytes of InternalValue.
  */
 protected:
@@ -87,11 +87,16 @@ public:
     {
         return FRealFixed(real_fixed_type::GetMinValue());
     }
+
+    static FRealFixed Pi;
+    static FRealFixed HalfPi;
+    static FRealFixed DegToRad;
+    static FRealFixed RadToDeg;
 };
 
 FRealFixed operator""_fx(const char* str);
 
-// Type traits, so UE4 knows FRealFixed implements ExportTextItem and ImportTextItem
+// Type traits, so Unreal Engine knows FRealFixed implements ExportTextItem and ImportTextItem
 template<>
 struct TStructOpsTypeTraits<FRealFixed> : public TStructOpsTypeTraitsBase2<FRealFixed>
 {
@@ -287,5 +292,83 @@ public:
 
     UFUNCTION(BlueprintPure, category = "RealFixed", meta = (DisplayName = "Abs RealFixed", CompactNodeTitle = "Abs"))
     static FRealFixed Abs(const FRealFixed& Val);
+
+    // 03-07-2025 Added Parity with RealFloat on missing functions - Koenji
+
+    // -- MISSING TRIGONOMETRIC AND ANGLE FUNCTIONS --
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Normalize Angle (Radians)"))
+    static FRealFixed NormalizeAngleRad(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Sin (Radians)", CompactNodeTitle = "SINr"))
+    static FRealFixed SinRad(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Cos (Radians)", CompactNodeTitle = "COSr"))
+    static FRealFixed CosRad(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Tan (Radians)", CompactNodeTitle = "TANr"))
+    static FRealFixed TanRad(const FRealFixed& InVal);
+    
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Normalize Angle (Degrees)"))
+    static FRealFixed NormalizeAngleDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Sin (Degrees)", CompactNodeTitle = "SINd"))
+    static FRealFixed SinDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Cos (Degrees)", CompactNodeTitle = "COSd"))
+    static FRealFixed CosDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Tan (Degrees)", CompactNodeTitle = "TANd"))
+    static FRealFixed TanDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Asin (Radians)", CompactNodeTitle = "ASINr"))
+    static FRealFixed AsinRad(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Acos (Radians)", CompactNodeTitle = "ACOSr"))
+    static FRealFixed AcosRad(const FRealFixed& InVal);
+    
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Atan (Radians)", CompactNodeTitle = "ATANr"))
+    static FRealFixed AtanRad(const FRealFixed& InVal);
+    
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Atan2 (Radians)", CompactNodeTitle = "ATAN2r"))
+    static FRealFixed Atan2Rad(const FRealFixed& Y, const FRealFixed& X);
+    
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Asin (Degrees)", CompactNodeTitle = "ASINd"))
+    static FRealFixed AsinDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Acos (Degrees)", CompactNodeTitle = "ACOSd"))
+    static FRealFixed AcosDeg(const FRealFixed& InVal);
+    
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Atan (Degrees)", CompactNodeTitle = "ATANd"))
+    static FRealFixed AtanDeg(const FRealFixed& InVal);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Atan2 (Degrees)", CompactNodeTitle = "ATAN2d"))
+    static FRealFixed Atan2Deg(const FRealFixed& Y, const FRealFixed& X);
+
+
+    // -- MISSING EXPONENTIAL AND POWER FUNCTIONS --
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed", meta = (DisplayName = "Pow", CompactNodeTitle = "Pow"))
+    static FRealFixed Pow(const FRealFixed& Base, const FRealFixed& Exp);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed", meta = (DisplayName = "Exp", CompactNodeTitle = "Exp"))
+    static FRealFixed Exp(const FRealFixed& Val);
+
+
+    // -- MISSING UTILITY FUNCTIONS --
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed", meta = (DisplayName = "Sign", CompactNodeTitle = "Sign"))
+    static FRealFixed Sign(const FRealFixed& Val);
+
+    // Also adding InvSqrt for convenience, as it's often used in vector/quat math.
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed", meta = (DisplayName = "Inverse Sqrt", CompactNodeTitle = "InvSqrt", Keywords = "1/sqrt"))
+    static FRealFixed InvSqrt(const FRealFixed& Val);
+
+    // Also adding conversion helpers for convenience.
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Degrees To Radians", CompactNodeTitle = "DegToRad"))
+    static FRealFixed DegreesToRadians(const FRealFixed& Deg);
+
+    UFUNCTION(BlueprintPure, category = "Math|RealFixed|Trig", meta = (DisplayName = "Radians To Degrees", CompactNodeTitle = "RadToDeg"))
+    static FRealFixed RadiansToDegrees(const FRealFixed& Rad);
 
 };
