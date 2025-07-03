@@ -247,10 +247,12 @@ FRealFixed URealFixedMath::RadiansToDegrees(const FRealFixed& Rad)
 
 FRealFixed URealFixedMath::Sign(const FRealFixed& Val)
 {
-    // The original implementation in RealFloatMath was incorrect.
-    // This version correctly returns -1 for negative, 1 for positive, and 0 for zero.
-    // It is equivalent to: (Val > FRealFixed(0)) ? FRealFixed(1) : ((Val < FRealFixed(0)) ? FRealFixed(-1) : FRealFixed(0));
-    return FRealFixed(ttmath::Sgn(Val.Value));
+    // The ttmath::Sgn function expects a type with internal methods that real_fixed lacks.
+    // We implement it manually using comparisons, which are safe and correct.
+    const FRealFixed Zero(0);
+    if (Val > Zero) return FRealFixed(1);
+    if (Val < Zero) return FRealFixed(-1);
+    return Zero;
 }
 
 FRealFixed URealFixedMath::InvSqrt(const FRealFixed& Val)
@@ -307,17 +309,17 @@ FRealFixed URealFixedMath::NormalizeAngleDeg(const FRealFixed& InVal)
 
 FRealFixed URealFixedMath::SinRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::Sin(InVal.Value));
+    return FRealFixed(ttmath::Sin(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::CosRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::Cos(InVal.Value));
+    return FRealFixed(ttmath::Cos(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::TanRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::Tan(InVal.Value));
+    return FRealFixed(ttmath::Tan(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::SinDeg(const FRealFixed& InVal)
@@ -340,68 +342,27 @@ FRealFixed URealFixedMath::TanDeg(const FRealFixed& InVal)
 
 FRealFixed URealFixedMath::AsinRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::ASin(InVal.Value));
+    return FRealFixed(ttmath::ASin(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::AcosRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::ACos(InVal.Value));
+    return FRealFixed(ttmath::ACos(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::AtanRad(const FRealFixed& InVal)
 {
-    return FRealFixed(ttmath::ATan(InVal.Value));
+    return FRealFixed(ttmath::ATan(InVal.ToBig()));
 }
 
 FRealFixed URealFixedMath::Atan2Rad(const FRealFixed& Y, const FRealFixed& X)
 {
-    // This is a direct port of the logic from URealFloatMath::Atan2Rad.
-
     const FRealFixed Zero(0);
-
-    // Handle the undefined case at the origin
-    if (X == Zero && Y == Zero)
-    {
-        return Zero;
-    }
-
-    // Handle cases on the X-axis
-    if (Y == Zero)
-    {
-        if (X > Zero)
-        {
-            return Zero;
-        }
-        else
-        {
-            // The original library uses -Pi, which is coterminal with Pi. We will be consistent.
-            return -FRealFixed::Pi;
-        }
-    }
-
-    // Handle cases on the Y-axis
-    if (X == Zero)
-    {
-        if (Y > Zero)
-        {
-            return FRealFixed::HalfPi;
-        }
-        else
-        {
-            return -FRealFixed::HalfPi;
-        }
-    }
-
-    // General case for the four quadrants
+    if (X == Zero && Y == Zero) return Zero;
+    if (Y == Zero) return (X > Zero) ? Zero : -FRealFixed::Pi;
+    if (X == Zero) return (Y > Zero) ? FRealFixed::HalfPi : -FRealFixed::HalfPi;
     FRealFixed Angle = AtanRad(Y / X);
-
-    // Correct the angle for the left-half plane (Quadrants II and III)
-    if (X < Zero)
-    {
-        // Adding Pi corrects the angle. Normalization handles Quadrant III correctly.
-        Angle = NormalizeAngleRad(Angle + FRealFixed::Pi);
-    }
-
+    if (X < Zero) Angle = NormalizeAngleRad(Angle + FRealFixed::Pi);
     return Angle;
 }
 
@@ -431,10 +392,10 @@ FRealFixed URealFixedMath::Atan2Deg(const FRealFixed& Y, const FRealFixed& X)
 FRealFixed URealFixedMath::Pow(const FRealFixed& Base, const FRealFixed& Exp)
 {
     // a^b = e^(b*ln(a))
-    return FRealFixed(ttmath::Exp(Exp.Value * ttmath::Ln(Base.Value)));
+    return FRealFixed(ttmath::Exp(Exp.Value.ToBig() * ttmath::Ln(Base.Value.ToBig())));
 }
 
 FRealFixed URealFixedMath::Exp(const FRealFixed& Val)
 {
-    return FRealFixed(ttmath::Exp(Val.Value));
+    return FRealFixed(ttmath::Exp(Val.ToBig()));
 }
