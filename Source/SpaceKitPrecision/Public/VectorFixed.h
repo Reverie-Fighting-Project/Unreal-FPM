@@ -29,12 +29,34 @@ public:
 
     static FVectorFixed Identity;
 
+    static FVectorFixed ZeroVector;
+
+    static FVectorFixed VectorUp;
+
+    static FVectorFixed VectorDown;
+
+    static FVectorFixed VectorLeft;
+
+    static FVectorFixed VectorRight;
+
+    static FVectorFixed VectorOne;
+
     FVectorFixed()
         : X(0.0), Y(0.0), Z(0.0)
     {
     }
 
     FVectorFixed(FRealFixed InX, FRealFixed InY, FRealFixed InZ)
+        : X(InX), Y(InY), Z(InZ)
+    {
+    }
+
+    FVectorFixed(int32 InX, int32 InY, int32 InZ)
+        : X(InX), Y(InY), Z(InZ)
+    {
+    }
+
+    FVectorFixed(float InX, float InY, float InZ)
         : X(InX), Y(InY), Z(InZ)
     {
     }

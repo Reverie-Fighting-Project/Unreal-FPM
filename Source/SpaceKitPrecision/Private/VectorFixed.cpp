@@ -1,9 +1,14 @@
 // Copyright 2020 Baptiste Hutteau Licensed under the Apache License, Version 2.0
 
 #include "SpaceKitPrecision/Public/VectorFixed.h"
-#include "SpaceKitPrecision/Public/VectorFloat.h"
 
 FVectorFixed FVectorFixed::Identity = FVectorFixed();
+FVectorFixed FVectorFixed::ZeroVector = FVectorFixed(0, 0, 0);
+FVectorFixed FVectorFixed::VectorUp = FVectorFixed(0, 0, 1);
+FVectorFixed FVectorFixed::VectorDown = FVectorFixed(0, 0, -1);
+FVectorFixed FVectorFixed::VectorLeft = FVectorFixed(0, -1, 0);
+FVectorFixed FVectorFixed::VectorRight = FVectorFixed(0, 1, 0);
+FVectorFixed FVectorFixed::VectorOne = FVectorFixed(1, 1, 1);
 
 FVectorFixed UVectorFixedMath::ConvFVectorToVectorFixed(const FVector& InVec)
 {
