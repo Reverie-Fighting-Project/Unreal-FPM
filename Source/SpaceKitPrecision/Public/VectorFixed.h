@@ -49,26 +49,17 @@ public:
     FVectorFixed(FRealFixed InX, FRealFixed InY, FRealFixed InZ)
         : X(InX), Y(InY), Z(InZ)
     {
-        X.Value = InX.Value;
-        Y.Value = InY.Value;
-        Z.Value = InZ.Value;
     }
     
 
     FVectorFixed(float InX, float InY, float InZ)
         : X(InX), Y(InY), Z(InZ)
     {
-        X.Value = InX;
-        Y.Value = InY;
-        Z.Value = InZ;
     }
 
     explicit FVectorFixed(const FVector& InVec)
         : X(InVec.X), Y(InVec.Y), Z(InVec.Z)
     {
-        X.Value = InVec.X;
-        Y.Value = InVec.Y;
-        Z.Value = InVec.Z;
     }
 
     // Vector math
