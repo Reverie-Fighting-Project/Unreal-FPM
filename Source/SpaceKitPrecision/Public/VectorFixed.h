@@ -49,21 +49,26 @@ public:
     FVectorFixed(FRealFixed InX, FRealFixed InY, FRealFixed InZ)
         : X(InX), Y(InY), Z(InZ)
     {
+        X.Value = InX.Value;
+        Y.Value = InY.Value;
+        Z.Value = InZ.Value;
     }
-
-    FVectorFixed(int32 InX, int32 InY, int32 InZ)
-        : X(InX), Y(InY), Z(InZ)
-    {
-    }
+    
 
     FVectorFixed(float InX, float InY, float InZ)
         : X(InX), Y(InY), Z(InZ)
     {
+        X.Value = InX;
+        Y.Value = InY;
+        Z.Value = InZ;
     }
 
     explicit FVectorFixed(const FVector& InVec)
         : X(InVec.X), Y(InVec.Y), Z(InVec.Z)
     {
+        X.Value = InVec.X;
+        Y.Value = InVec.Y;
+        Z.Value = InVec.Z;
     }
 
     // Vector math
@@ -211,6 +216,16 @@ public:
     {
         return Axis == EAxis::X ? X : Axis == EAxis::Y ? Y : Z;
     }
+
+    bool IsNearlyZero() const
+    {
+        FRealFixed Tolerance = FRealFixed(1.e-4f);
+        
+        return	FMath::Abs(X)<=Tolerance
+        &&	FMath::Abs(Y)<=Tolerance
+        &&	FMath::Abs(Z)<=Tolerance;
+    }
+    
 };
 
 /**
