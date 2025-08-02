@@ -20,18 +20,6 @@ FVector UVectorFixedMath::ConvVectorFixedToFVector(const FVectorFixed& InVec)
 	return InVec.ToFVector();
 }
 
-FVectorFixed UVectorFixedMath::MakeVectorFixed(FRealFixed X, FRealFixed Y, FRealFixed Z)
-{
-	return FVectorFixed(X, Y, Z);
-}
-
-void UVectorFixedMath::BreakVectorFixed(const FVectorFixed& Vec, FRealFixed& X, FRealFixed& Y, FRealFixed& Z)
-{
-	X = Vec.X;
-	Y = Vec.Y;
-	Z = Vec.Z;
-}
-
 FVectorFixed UVectorFixedMath::VecPlusVec(const FVectorFixed& First, const FVectorFixed& Second)
 {
 	return First + Second;

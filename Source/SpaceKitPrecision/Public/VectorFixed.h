@@ -18,13 +18,13 @@ struct SPACEKITPRECISION_API FVectorFixed
 
 public:
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FRealFixed X;
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FRealFixed Y;
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FRealFixed Z;
 
     static FVectorFixed Identity;
@@ -235,12 +235,6 @@ public:
 
     UFUNCTION(BlueprintPure, category = "VectorFixed", meta = (DisplayName = "VectorFixed to FVector", CompactNodeTitle = "->", BlueprintAutocast))
     static FVector ConvVectorFixedToFVector(const FVectorFixed& InVec);
-
-    UFUNCTION(BlueprintPure, category = "VectorFixed", meta = (DisplayName = "Make VectorFixed", CompactNodeTitle = "Make"))
-    static FVectorFixed MakeVectorFixed(FRealFixed X, FRealFixed Y, FRealFixed Z);
-
-    UFUNCTION(BlueprintPure, category = "VectorFixed", meta = (DisplayName = "Break VectorFixed", CompactNodeTitle = "Make"))
-    static void BreakVectorFixed(const FVectorFixed& Vec, FRealFixed& X, FRealFixed& Y, FRealFixed& Z);
 
 // Basic VecFixed math
 public:
