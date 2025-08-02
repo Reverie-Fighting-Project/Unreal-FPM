@@ -179,12 +179,6 @@ public:
 
     UFUNCTION(BlueprintPure, category = "RotatorFloat", meta = (DisplayName = "RotatorFloat to FRotator", CompactNodeTitle = "->", BlueprintAutocast))
     static FRotator ConvRotatorFloatToFRotator(const FRotatorFloat& InRot);
-    
-    UFUNCTION(BlueprintPure, category = "RotatorFloat", meta = (DisplayName = "Make RotatorFloat", CompactNodeTitle = "Make"))
-    static FRotatorFloat MakeRotatorFloat(const FRealFloat& Yaw, const FRealFloat& Pitch, const FRealFloat& Roll);
-
-    UFUNCTION(BlueprintPure, category = "RotatorFloat", meta = (DisplayName = "Break RotatorFloat", CompactNodeTitle = "Make"))
-    static void BreakRotatorFloat(const FRotatorFloat& Rot, FRealFloat& Yaw, FRealFloat& Pitch, FRealFloat& Roll);
 
 // Basic RotFloat math
 public:

@@ -49,18 +49,6 @@ FRotator URotatorFloatMath::ConvRotatorFloatToFRotator(const FRotatorFloat& InRo
 	return InRot.ToFRotator();
 }
 
-FRotatorFloat URotatorFloatMath::MakeRotatorFloat(const FRealFloat& Yaw, const FRealFloat& Pitch, const FRealFloat& Roll)
-{
-	return FRotatorFloat(Yaw, Pitch, Roll);
-}
-
-void URotatorFloatMath::BreakRotatorFloat(const FRotatorFloat& Rot, FRealFloat& Yaw, FRealFloat& Pitch, FRealFloat& Roll)
-{
-	Yaw = Rot.Yaw;
-	Pitch = Rot.Pitch;
-	Roll = Rot.Roll;
-}
-
 FRotatorFloat URotatorFloatMath::RotPlusRot(const FRotatorFloat& First, const FRotatorFloat& Second)
 {
 	return First + Second;
@@ -98,5 +86,5 @@ bool URotatorFloatMath::RotEqualsRot(const FRotatorFloat& First, const FRotatorF
 
 bool URotatorFloatMath::RotNotEqualsRot(const FRotatorFloat& First, const FRotatorFloat& Second, const FRealFloat& Tolerance)
 {
-	return !URotatorFloatMath::RotEqualsRot(First, Second, Tolerance);
+	return !RotEqualsRot(First, Second, Tolerance);
 }
