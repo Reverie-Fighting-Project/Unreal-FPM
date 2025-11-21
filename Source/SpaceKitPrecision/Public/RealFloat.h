@@ -27,7 +27,7 @@ struct FRealFixed;
  * It is meant to be used as a native type: you can do arithmetic directly using instances of this class.
  * This is declared as an USTRUCT() only to be integrated into Blueprints. USTRUCT does not add any performance overhead.
  */
-USTRUCT(BlueprintType, meta = (HasNativeMake = "SpaceKitPrecision.RealFloatMath.MakeReal"))
+USTRUCT(BlueprintType)
 struct SPACEKITPRECISION_API FRealFloat
 {
     GENERATED_BODY()
