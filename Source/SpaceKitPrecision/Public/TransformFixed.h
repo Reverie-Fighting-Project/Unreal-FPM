@@ -16,69 +16,69 @@ struct SPACEKITPRECISION_API FTransformFixed
 public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TransformFixed")
-    FQuatFixed Rotation;
+    FVectorFixed Location;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TransformFixed", meta=(ShowOnlyInnerProperties))
+    FRotatorFixed Rotation;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TransformFixed")
-    FVectorFixed Translation;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TransformFixed")
-    FVectorFixed Scale3D;
+    FVectorFixed Scale;
 
     static FTransformFixed Identity;
 
     FTransformFixed()
-        : Rotation(FQuatFixed::Identity)
-        , Translation(FVectorFixed::ZeroVector)
-        , Scale3D(FVectorFixed::VectorOne)
+        : Location(FRealFixed(0), FRealFixed(0), FRealFixed(0))
+        , Rotation(FRealFixed(0), FRealFixed(0), FRealFixed(0))
+        , Scale(FRealFixed(1), FRealFixed(1), FRealFixed(1))
     {
     }
 
-    FTransformFixed(const FQuatFixed& InRotation, const FVectorFixed& InTranslation, const FVectorFixed& InScale3D)
-        : Rotation(InRotation)
-        , Translation(InTranslation)
-        , Scale3D(InScale3D)
+    FTransformFixed(const FRotatorFixed& InRotation, const FVectorFixed& InLocation, const FVectorFixed& InScale)
+        : Location(InLocation)
+        , Rotation(InRotation)
+        , Scale(InScale)
     {
     }
 
-    FTransformFixed(const FQuatFixed& InRotation, const FVectorFixed& InTranslation)
-        : Rotation(InRotation)
-        , Translation(InTranslation)
-        , Scale3D(FVectorFixed::VectorOne)
+    FTransformFixed(const FRotatorFixed& InRotation, const FVectorFixed& InLocation)
+        : Location(InLocation)
+        , Rotation(InRotation)
+        , Scale(FRealFixed(1), FRealFixed(1), FRealFixed(1))
     {
     }
 
-    explicit FTransformFixed(const FVectorFixed& InTranslation)
-        : Rotation(FQuatFixed::Identity)
-        , Translation(InTranslation)
-        , Scale3D(FVectorFixed::VectorOne)
+    explicit FTransformFixed(const FVectorFixed& InLocation)
+        : Location(InLocation)
+        , Rotation(FRealFixed(0), FRealFixed(0), FRealFixed(0))
+        , Scale(FRealFixed(1), FRealFixed(1), FRealFixed(1))
     {
     }
 
     explicit FTransformFixed(const FTransform& Transform)
-        : Rotation(Transform.GetRotation())
-        , Translation(Transform.GetTranslation())
-        , Scale3D(Transform.GetScale3D())
+        : Location(Transform.GetTranslation())
+        , Rotation(Transform.GetRotation().Rotator())
+        , Scale(Transform.GetScale3D())
     {
     }
 
     FTransform ToFTransform() const
     {
-        return FTransform(Rotation.ToFQuat(), Translation.ToFVector(), Scale3D.ToFVector());
+        return FTransform(Rotation.ToFRotator(), Location.ToFVector(), Scale.ToFVector());
     }
 
     FVectorFixed TransformPosition(const FVectorFixed& V) const
     {
-        return Rotation.RotateVector(V * Scale3D) + Translation;
+        return Rotation.RotateVector(V * Scale) + Location;
     }
 
     FVectorFixed TransformPositionNoScale(const FVectorFixed& V) const
     {
-        return Rotation.RotateVector(V) + Translation;
+        return Rotation.RotateVector(V) + Location;
     }
 
     FVectorFixed TransformVector(const FVectorFixed& V) const
     {
-        return Rotation.RotateVector(V * Scale3D);
+        return Rotation.RotateVector(V * Scale);
     }
 
     FVectorFixed TransformVectorNoScale(const FVectorFixed& V) const
@@ -88,19 +88,19 @@ public:
 
     FVectorFixed InverseTransformPosition(const FVectorFixed& V) const
     {
-        const FVectorFixed Translated = V - Translation;
+        const FVectorFixed Translated = V - Location;
         const FVectorFixed Rotated = Rotation.UnrotateVector(Translated);
-        return Rotated / Scale3D;
+        return Rotated / Scale;
     }
 
     FVectorFixed InverseTransformPositionNoScale(const FVectorFixed& V) const
     {
-        return Rotation.UnrotateVector(V - Translation);
+        return Rotation.UnrotateVector(V - Location);
     }
 
     FVectorFixed InverseTransformVector(const FVectorFixed& V) const
     {
-        return Rotation.UnrotateVector(V) / Scale3D;
+        return Rotation.UnrotateVector(V) / Scale;
     }
 
     FVectorFixed InverseTransformVectorNoScale(const FVectorFixed& V) const
@@ -112,11 +112,11 @@ public:
     {
         FTransformFixed Result;
         
-        Result.Rotation = Rotation * Other.Rotation;
+        Result.Rotation = FRotatorFixed(FQuatFixed(Rotation) * FQuatFixed(Other.Rotation));
         
-        Result.Scale3D = Scale3D * Other.Scale3D;
+        Result.Scale = Scale * Other.Scale;
         
-        Result.Translation = TransformPosition(Other.Translation);
+        Result.Location = TransformPosition(Other.Location);
         
         return Result;
     }
@@ -131,15 +131,16 @@ public:
     {
         FTransformFixed Result;
         
-        Result.Rotation = Rotation.Inverse();
+        const FQuatFixed QuatRot(Rotation);
+        Result.Rotation = FRotatorFixed(QuatRot.Inverse());
         
-        Result.Scale3D = FVectorFixed(
-            FRealFixed(1) / Scale3D.X,
-            FRealFixed(1) / Scale3D.Y,
-            FRealFixed(1) / Scale3D.Z
+        Result.Scale = FVectorFixed(
+            FRealFixed(1) / Scale.X,
+            FRealFixed(1) / Scale.Y,
+            FRealFixed(1) / Scale.Z
         );
         
-        Result.Translation = Result.Rotation.RotateVector(-Translation * Result.Scale3D);
+        Result.Location = FQuatFixed(Result.Rotation).RotateVector(-Location * Result.Scale);
         
         return Result;
     }
@@ -148,27 +149,27 @@ public:
     {
         FTransformFixed Result;
         
-        Result.Translation = A.Translation + (B.Translation - A.Translation) * Alpha;
+        Result.Location = A.Location + (B.Location - A.Location) * Alpha;
         
-        Result.Rotation = UQuatFixedMath::Slerp(A.Rotation, B.Rotation, Alpha);
+        Result.Rotation = FRotatorFixed(UQuatFixedMath::Slerp(FQuatFixed(A.Rotation), FQuatFixed(B.Rotation), Alpha));
         
-        Result.Scale3D = A.Scale3D + (B.Scale3D - A.Scale3D) * Alpha;
+        Result.Scale = A.Scale + (B.Scale - A.Scale) * Alpha;
         
         return Result;
     }
 
     bool Equals(const FTransformFixed& Other, const FRealFixed& Tolerance = FRealFixed("0.0001")) const
     {
-        return Translation.Equals(Other.Translation, Tolerance)
+        return Location.Equals(Other.Location, Tolerance)
             && Rotation.Equals(Other.Rotation, Tolerance)
-            && Scale3D.Equals(Other.Scale3D, Tolerance);
+            && Scale.Equals(Other.Scale, Tolerance);
     }
 
     bool operator==(const FTransformFixed& Other) const
     {
-        return Translation == Other.Translation
+        return Location == Other.Location
             && Rotation == Other.Rotation
-            && Scale3D == Other.Scale3D;
+            && Scale == Other.Scale;
     }
 
     bool operator!=(const FTransformFixed& Other) const
@@ -178,42 +179,47 @@ public:
 
     FRotatorFixed Rotator() const
     {
-        return FRotatorFixed(Rotation);
+        return Rotation;
     }
 
     void SetRotation(const FRotatorFixed& InRotator)
     {
-        Rotation = FQuatFixed(InRotator);
+        Rotation = InRotator;
     }
 
     void SetRotation(const FQuatFixed& InRotation)
     {
-        Rotation = InRotation;
+        Rotation = FRotatorFixed(InRotation);
     }
 
     FQuatFixed GetRotation() const
     {
+        return FQuatFixed(Rotation);
+    }
+
+    FRotatorFixed GetRotator() const
+    {
         return Rotation;
     }
 
-    FVectorFixed GetTranslation() const
+    FVectorFixed GetLocation() const
     {
-        return Translation;
+        return Location;
     }
 
-    void SetTranslation(const FVectorFixed& InTranslation)
+    void SetLocation(const FVectorFixed& InLocation)
     {
-        Translation = InTranslation;
+        Location = InLocation;
     }
 
-    FVectorFixed GetScale3D() const
+    FVectorFixed GetScale() const
     {
-        return Scale3D;
+        return Scale;
     }
 
-    void SetScale3D(const FVectorFixed& InScale3D)
+    void SetScale(const FVectorFixed& InScale)
     {
-        Scale3D = InScale3D;
+        Scale = InScale;
     }
 
     void Accumulate(const FTransformFixed& Other)
@@ -223,13 +229,16 @@ public:
 
     void NormalizeRotation()
     {
-        Rotation.Normalize();
+        FQuatFixed Quat(Rotation);
+        Quat.Normalize();
+        Rotation = FRotatorFixed(Quat);
     }
 
     bool IsRotationNormalized() const
     {
-        const FRealFixed SquareSum = Rotation.X * Rotation.X + Rotation.Y * Rotation.Y + 
-                                      Rotation.Z * Rotation.Z + Rotation.W * Rotation.W;
+        const FQuatFixed Quat(Rotation);
+        const FRealFixed SquareSum = Quat.X * Quat.X + Quat.Y * Quat.Y + 
+                                      Quat.Z * Quat.Z + Quat.W * Quat.W;
         const FRealFixed One(1);
         const FRealFixed Tolerance("0.01");
         return URealFixedMath::Abs(SquareSum - One) < Tolerance;
@@ -237,10 +246,10 @@ public:
 
     FString ToString() const
     {
-        return FString::Printf(TEXT("Translation: %s Rotation: %s Scale: %s"), 
-            *Translation.ToString(), 
+        return FString::Printf(TEXT("Location: %s Rotation: %s Scale: %s"), 
+            *Location.ToString(), 
             *Rotation.ToString(), 
-            *Scale3D.ToString());
+            *Scale.ToString());
     }
 };
 
@@ -258,16 +267,16 @@ public:
     static FTransform ConvTransformFixedToFTransform(const FTransformFixed& Transform);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Make TransformFixed (TRS)", Keywords = "construct build", CompactNodeTitle = "Make"))
-    static FTransformFixed MakeTransformFixed(const FVectorFixed& Translation, const FRotatorFixed& Rotation, const FVectorFixed& Scale);
+    static FTransformFixed MakeTransformFixed(const FVectorFixed& Location, const FRotatorFixed& Rotation, const FVectorFixed& Scale);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Make TransformFixed from Location", Keywords = "construct build", CompactNodeTitle = "Make"))
     static FTransformFixed MakeTransformFromLocation(const FVectorFixed& Location);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Break TransformFixed", Keywords = "split", CompactNodeTitle = "Break"))
-    static void BreakTransformFixed(const FTransformFixed& Transform, FVectorFixed& Translation, FRotatorFixed& Rotation, FVectorFixed& Scale);
+    static void BreakTransformFixed(const FTransformFixed& Transform, FVectorFixed& Location, FRotatorFixed& Rotation, FVectorFixed& Scale);
 
-    UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Get Translation", CompactNodeTitle = "Translation"))
-    static FVectorFixed GetTranslation(const FTransformFixed& Transform);
+    UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Get Location", CompactNodeTitle = "Location"))
+    static FVectorFixed GetLocation(const FTransformFixed& Transform);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Get Rotation (Quat)", CompactNodeTitle = "Rotation"))
     static FQuatFixed GetRotation(const FTransformFixed& Transform);
@@ -276,10 +285,10 @@ public:
     static FRotatorFixed GetRotator(const FTransformFixed& Transform);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Get Scale", CompactNodeTitle = "Scale"))
-    static FVectorFixed GetScale3D(const FTransformFixed& Transform);
+    static FVectorFixed GetScale(const FTransformFixed& Transform);
 
-    UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Set Translation"))
-    static FTransformFixed SetTranslation(const FTransformFixed& Transform, const FVectorFixed& Translation);
+    UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Set Location"))
+    static FTransformFixed SetLocation(const FTransformFixed& Transform, const FVectorFixed& Location);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Set Rotation (Quat)"))
     static FTransformFixed SetRotation(const FTransformFixed& Transform, const FQuatFixed& Rotation);
@@ -288,7 +297,7 @@ public:
     static FTransformFixed SetRotationFromRotator(const FTransformFixed& Transform, const FRotatorFixed& Rotation);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Set Scale"))
-    static FTransformFixed SetScale3D(const FTransformFixed& Transform, const FVectorFixed& Scale);
+    static FTransformFixed SetScale(const FTransformFixed& Transform, const FVectorFixed& Scale);
 
     UFUNCTION(BlueprintPure, Category = "Math|TransformFixed", meta = (DisplayName = "Transform Location", CompactNodeTitle = "TransformLoc"))
     static FVectorFixed TransformPosition(const FTransformFixed& Transform, const FVectorFixed& Position);

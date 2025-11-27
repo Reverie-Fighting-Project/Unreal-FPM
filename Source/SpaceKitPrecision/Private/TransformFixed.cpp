@@ -3,7 +3,7 @@
 #include "SpaceKitPrecision/Public/TransformFixed.h"
 
 FTransformFixed FTransformFixed::Identity = FTransformFixed(
-    FQuatFixed(FRealFixed(0), FRealFixed(0), FRealFixed(0), FRealFixed(1)),
+    FRotatorFixed(FRealFixed(0), FRealFixed(0), FRealFixed(0)),
     FVectorFixed(FRealFixed(0), FRealFixed(0), FRealFixed(0)),
     FVectorFixed(FRealFixed(1), FRealFixed(1), FRealFixed(1))
 );
@@ -18,9 +18,9 @@ FTransform UTransformFixedMath::ConvTransformFixedToFTransform(const FTransformF
     return Transform.ToFTransform();
 }
 
-FTransformFixed UTransformFixedMath::MakeTransformFixed(const FVectorFixed& Translation, const FRotatorFixed& Rotation, const FVectorFixed& Scale)
+FTransformFixed UTransformFixedMath::MakeTransformFixed(const FVectorFixed& Location, const FRotatorFixed& Rotation, const FVectorFixed& Scale)
 {
-    return FTransformFixed(FQuatFixed(Rotation), Translation, Scale);
+    return FTransformFixed(Rotation, Location, Scale);
 }
 
 FTransformFixed UTransformFixedMath::MakeTransformFromLocation(const FVectorFixed& Location)
@@ -28,16 +28,16 @@ FTransformFixed UTransformFixedMath::MakeTransformFromLocation(const FVectorFixe
     return FTransformFixed(Location);
 }
 
-void UTransformFixedMath::BreakTransformFixed(const FTransformFixed& Transform, FVectorFixed& Translation, FRotatorFixed& Rotation, FVectorFixed& Scale)
+void UTransformFixedMath::BreakTransformFixed(const FTransformFixed& Transform, FVectorFixed& Location, FRotatorFixed& Rotation, FVectorFixed& Scale)
 {
-    Translation = Transform.Translation;
-    Rotation = FRotatorFixed(Transform.Rotation);
-    Scale = Transform.Scale3D;
+    Location = Transform.Location;
+    Rotation = Transform.Rotation;
+    Scale = Transform.Scale;
 }
 
-FVectorFixed UTransformFixedMath::GetTranslation(const FTransformFixed& Transform)
+FVectorFixed UTransformFixedMath::GetLocation(const FTransformFixed& Transform)
 {
-    return Transform.GetTranslation();
+    return Transform.GetLocation();
 }
 
 FQuatFixed UTransformFixedMath::GetRotation(const FTransformFixed& Transform)
@@ -47,18 +47,18 @@ FQuatFixed UTransformFixedMath::GetRotation(const FTransformFixed& Transform)
 
 FRotatorFixed UTransformFixedMath::GetRotator(const FTransformFixed& Transform)
 {
-    return Transform.Rotator();
+    return Transform.GetRotator();
 }
 
-FVectorFixed UTransformFixedMath::GetScale3D(const FTransformFixed& Transform)
+FVectorFixed UTransformFixedMath::GetScale(const FTransformFixed& Transform)
 {
-    return Transform.GetScale3D();
+    return Transform.GetScale();
 }
 
-FTransformFixed UTransformFixedMath::SetTranslation(const FTransformFixed& Transform, const FVectorFixed& Translation)
+FTransformFixed UTransformFixedMath::SetLocation(const FTransformFixed& Transform, const FVectorFixed& Location)
 {
     FTransformFixed Result = Transform;
-    Result.SetTranslation(Translation);
+    Result.SetLocation(Location);
     return Result;
 }
 
@@ -76,10 +76,10 @@ FTransformFixed UTransformFixedMath::SetRotationFromRotator(const FTransformFixe
     return Result;
 }
 
-FTransformFixed UTransformFixedMath::SetScale3D(const FTransformFixed& Transform, const FVectorFixed& Scale)
+FTransformFixed UTransformFixedMath::SetScale(const FTransformFixed& Transform, const FVectorFixed& Scale)
 {
     FTransformFixed Result = Transform;
-    Result.SetScale3D(Scale);
+    Result.SetScale(Scale);
     return Result;
 }
 
